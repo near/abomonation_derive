@@ -147,6 +147,32 @@ mod tests {
         }
     }
 
+    #[derive(Eq, PartialEq, Abomonation)]
+    pub struct Nested {
+        d: DataEnum,
+        s: Struct,
+    }
+
+    #[test]
+    fn test_nested() {
+        // create some test data out of abomonation-approved types
+        let d = DataEnum::A("test".to_owned(), 0, vec![0, 1, 2]);
+        let s = Struct { a: "foo".to_owned(), b: 1, c: vec![3, 4, 5] };
+        let record = Nested {d, s};
+
+        // encode vector into a Vec<u8>
+        let mut bytes = Vec::new();
+        unsafe { encode(&record, &mut bytes).unwrap(); }
+
+        assert_eq!(bytes.len(), measure(&record));
+
+        // decode from binary data
+        if let Some((result, rest)) = unsafe { decode::<Nested>(&mut bytes) } {
+            assert!(result == &record);
+            assert!(rest.len() == 0);
+        }
+    }
+
     pub trait SomeTrait {}
 
     #[allow(dead_code)]
